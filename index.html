@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PageLoop</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: scroll;
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+        }
+
+        .message-card {
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 16px;
+            display: inline-block;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user-card {
+            align-self: flex-end;
+            background-color: #eaf7fd;
+        }
+
+        .bot-card {
+            align-self: flex-start;
+            background-color: #f5f5f5;
+        }
+
+        .loading-text {
+            align-self: flex-start;
+            color: #888;
+            font-style: italic;
+        }
+
+        .word-count {
+            font-size: 12px;
+            color: #888;
+            text-align: right;
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: #fff;
+        }
+
+        .input-field {
+            width: 80%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .generate-button {
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 24px;
+            margin-left: 16px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .generate-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .generate-button:hover {
+            background-color: #45a049;
+        }
+
+        .bot-card p {
+            color: #000;
+        }
+
+        .dropdown-container {
+        
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-inline: 110px !important;
+            background-color: #fff;
+        }
+
+        .dropdown {
+            width: 45%; /* Adjust as needed */
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .dropdown-container {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            .dropdown {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .input-container {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px;
+            }
+
+            .input-field {
+                width: 100%;
+            }
+            .generate-button {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-container" id="chat-container"></div>
+        <div class="dropdown-container">
+            <select class="dropdown" id="book-dropdown">
+                <option value="">Select a book</option>
+                <!-- Add options dynamically using JavaScript -->
+            </select>
+            <select class="dropdown" id="character-dropdown">
+                <option value="">Select a character</option>
+                <!-- Add options dynamically using JavaScript -->
+            </select>
+        </div>
+        <div class="input-container">
+            <input type="text" class="input-field" id="input" placeholder="Type your message..." />
+            <button class="generate-button" id="send-button" disabled>Send</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const booksAndCharacters = {
+            "Harry Potter and the Half-Blood Prince": ["Harry Potter", "Hermione Granger", "Ron Weasley", "Severus Snape", "Dumbledore", "Voldemort"],
+    "The Great Gatsby": ["Jay Gatsby", "Daisy Buchanan", "Tom Buchanan", "Nick Carraway", "Jordan Baker"],
+    "To Kill a Mockingbird": ["Atticus Finch", "Scout Finch", "Jem Finch", "Boo Radley", "Calpurnia"],
+    "Pride and Prejudice": ["Elizabeth Bennet", "Mr. Darcy", "Jane Bennet", "Mr. Bingley", "Mr. Collins"],
+    "The Lord of the Rings": ["Frodo Baggins", "Aragorn", "Gandalf", "Samwise Gamgee", "Legolas", "Gollum"],
+    "1984": ["Winston Smith", "Julia", "Big Brother", "O'Brien", "Mr. Charrington"],
+    "The Catcher in the Rye": ["Holden Caulfield", "Phoebe Caulfield", "Mr. Antolini", "Jane Gallagher"],
+    "Jane Eyre": ["Jane Eyre", "Mr. Rochester", "St. John Rivers", "Mrs. Reed", "Helen Burns"],
+    "The Hunger Games": ["Katniss Everdeen", "Peeta Mellark", "Gale Hawthorne", "President Snow", "Effie Trinket"],
+    "The Hobbit": ["Bilbo Baggins", "Gandalf", "Thorin Oakenshield", "Smaug", "Gollum"],
+    "War and Peace": ["Pierre Bezukhov", "Natasha Rostova", "Prince Andrei Bolkonsky", "Countess Anna Pavlovna"],
+    "Les Misérables": ["Jean Valjean", "Cosette", "Javert", "Fantine", "Marius Pontmercy"],
+    "Gone with the Wind": ["Scarlett O'Hara", "Rhett Butler", "Ashley Wilkes", "Melanie Hamilton", "Prissy"],
+    "The Diary of a Young Girl": ["Anne Frank", "Otto Frank", "Margot Frank", "Peter van Pels", "Mr. Dussel"],
+    "The Tale of Two Cities": ["Charles Darnay", "Sydney Carton", "Lucie Manette", "Madame Defarge", "Mr. Jarvis Lorry"],
+    "Midnight's Children": ["Saleem Sinai", "Shiva", "Shri Srinivas", "Indira Gandhi", "Padma"],
+    "Freedom at Midnight": ["Mahatma Gandhi", "Jawaharlal Nehru", "Lord Mountbatten", "Muhammad Ali Jinnah", "Edwina Mountbatten"],
+    "The God of Small Things": ["Ammu", "Velutha", "Baby Kochamma", "Estha", "Rahel"],
+    "Train to Pakistan": ["Mano Majra", "Juggut Singh", "Iqbal", "Nooran", "Magistrate Hukum Chand"],
+    "Bhagavad Gita": ["Lord Krishna", "Arjuna", "Duryodhana", "Bhishma", "Dronacharya"],
+    "Gandhi: An Autobiography": ["Mahatma Gandhi", "Kasturba Gandhi", "Nelson Mandela", "Rabindranath Tagore"],
+    "Sardar Vallabhbhai Patel: The Man Who Unified India": ["Sardar Vallabhbhai Patel", "Mahatma Gandhi", "Jawaharlal Nehru", "Subhas Chandra Bose"],
+    "Jinnah: India-Partition-Independence": ["Muhammad Ali Jinnah", "Mahatma Gandhi", "Nehru", "Lord Mountbatten"],
+    "The Lowland": ["Subhash Mitra", "Udayan Mitra", "Gauri", "Bela", "Nirmal"],
+    "The Great Indian Novel": ["Mahatma Gandhi", "Indira Gandhi", "Lord Krishna", "Bhishma", "Yudhishthira"],
+    "An Autobiography: The Story of My Experiments with Truth": ["Mahatma Gandhi", "Kasturba Gandhi", "Narayan Hemchandra", "Sardar Patel"],
+
+  };
+        $(document).ready(function() {
+            const messagesContainer = $("#chat-container");
+            const inputField = $("#input");
+            const sendButton = $("#send-button");
+
+            const appendMessage = (role, content) => {
+                const cardClass = role === "user" ? "user-card" : "bot-card";
+                const messageCard = `<div class="message-card ${cardClass}">${content}</div>`;
+                messagesContainer.append(messageCard);
+                messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+            };
+
+            const showLoadingText = () => {
+                const loadingText = `<div class="message-card loading-text">Generating...</div>`;
+                messagesContainer.append(loadingText);
+                messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+            };
+
+            const updateResponse = (response) => {
+                const loadingCard = $(".loading-text").last();
+                loadingCard.replaceWith(response);
+            };
+
+            const updateWordCount = (count) => {
+                const wordCount = `<div class="word-count">${count} words</div>`;
+                const botCard = $(".bot-card").last();
+                botCard.append(wordCount);
+            };
+
+            const enableSendButton = () => {
+                sendButton.prop("disabled", false);
+            };
+
+            const disableSendButton = () => {
+                sendButton.prop("disabled", true);
+            };
+            enableSendButton();
+            const sendMessage = async () => {
+    const prompt = inputField.val().trim();
+    if (prompt === "") return;
+
+    const selectedBook = bookDropdown.val();
+    const selectedCharacter = characterDropdown.val();
+
+    appendMessage("user", prompt);
+    inputField.val("");
+    disableSendButton();
+
+    try {
+        showLoadingText();
+
+        const requestBody = `prompt=${encodeURIComponent(prompt)}&book=${encodeURIComponent(selectedBook)}&character=${encodeURIComponent(selectedCharacter)}`;
+        
+        const response = await fetch("https://faas-blr1-8177d592.doserverless.co/api/v1/web/fn-c9522d9c-124a-4d44-b476-362b8383451b/generator/generator1", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: requestBody,
+        });
+
+        const data = await response.json();
+
+        if (data[0].candidates[0].output) {
+            const reply = `<div class="message-card bot-card"><p>${data[0].candidates[0].output}</p></div>`;
+            updateResponse(reply);
+            const wordsCount = data.reply.trim().split(" ").length;
+            updateWordCount(wordsCount);
+        } else {
+            console.error(data.error);
+        }
+    } catch (error) {
+        console.error(error);
+    }
+
+    enableSendButton();
+};
+
+
+            sendButton.click(sendMessage);
+            inputField.keypress(function(event) {
+                if (event.which === 13) {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Clear chat history when characters are changed
+            $('#character-dropdown').change(function() {
+                messagesContainer.empty();
+            });
+
+            // Populate the book dropdown and update character dropdown
+            const bookDropdown = $('#book-dropdown');
+            const characterDropdown = $('#character-dropdown');
+
+            for (const book in booksAndCharacters) {
+                const option = `<option value="${book}">${book}</option>`;
+                bookDropdown.append(option);
+            }
+
+            // Update character dropdown based on selected book
+            bookDropdown.change(function() {
+                const selectedBook = $(this).val();
+                characterDropdown.empty().append('<option value="">Select a character</option>');
+                if (selectedBook) {
+                    const characters = booksAndCharacters[selectedBook];
+                    characters.forEach(function(character) {
+                        const option = `<option value="${character}">${character}</option>`;
+                        characterDropdown.append(option);
+                    });
+                }
+                messagesContainer.empty(); // Clear chat history when book is changed
+            });
+        });
+    </script>
+</body>
+</html>

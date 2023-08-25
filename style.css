@@ -1,0 +1,48 @@
+html, body {
+    height: 100%;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.chat-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+}
+
+.input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #fff;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.input-field {
+    width: 100%;
+}
+
+.message-card {
+    max-width: 70%;
+}
+
+.user-card {
+    align-self: flex-end;
+    background-color: #eaf7fd;
+}
+
+.bot-card {
+    align-self: flex-start;
+    background-color: #f5f5f5;
+}
