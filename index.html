@@ -124,8 +124,10 @@
             .container {
                 padding: 10px;
             }
+
             .dropdown-container {
                 flex-direction: column;
+                align-items: flex-start; /* Adjust alignment */
                 padding: 10px;
             }
 
@@ -133,10 +135,14 @@
                 width: 100%;
                 margin-bottom: 10px;
             }
+            .chat-container {
+                flex: 1; /* Allow chat container to scroll on small screens */
+                max-height: 50vh; /* Limit the chat container's height on small screens */
+            }
 
             .input-container {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: flex-start; /* Adjust alignment */
                 padding: 10px;
             }
 
